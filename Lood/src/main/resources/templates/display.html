@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Contact Manager</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #007bff;
+      --secondary-color: #ffffff;
+      --background-color: #121212;
+      --text-color: #ffffff;
+      --border-color: rgba(255, 255, 255, 0.2);
+      --hover-color: rgba(0, 123, 255, 0.2);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 2rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border-radius: 6px;
+      border: none;
+      background-color: var(--primary-color);
+      color: var(--secondary-color);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .btn:hover {
+      background-color: #0056b3;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      background-color: var(--primary-color);
+      color: var(--secondary-color);
+    }
+
+    tr:hover {
+      background-color: var(--hover-color);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      padding: 2rem;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 450px;
+      box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      position: relative;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+      text-align: left;
+    }
+
+    .form-group label {
+      font-weight: 500;
+      color: #333;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #007bff;
+      border-radius: 6px;
+      font-size: 1rem;
+      background: #f8f9fa;
+      color: #333;
+    }
+
+    .close-btn {
+      font-size: 1.5rem;
+      font-weight: bold;
+      cursor: pointer;
+      position: absolute;
+      right: 20px;
+      top: 10px;
+      color: #333;
+    }
+
+    .close-btn:hover {
+      color: #ff4d4d;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Contact Manager</h1>
+    <div>
+      <button class="btn" onclick="openModal('addContactModal')">Add Contact</button>
+      <form th:action="@{/logout}" method="post" style="display:inline;">
+        <button type="submit" class="btn">Logout</button>
+      </form>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Phone</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="contact : ${contacts}">
+      <td th:text="${contact['name']}"></td>
+      <td th:text="${contact['email']}"></td>
+      <td th:text="${contact['phone']}"></td>
+      <td class="action-buttons">
+        <button class="btn" th:attr="onclick=|updateModal('${contact['resourceName']}', '${contact['name']}', '${contact['email']}', '${contact['phone']}')|">Edit</button>
+        <form th:action="@{/delete-contact}" method="post" style="display:inline;">
+          <input type="hidden" name="resourceName" th:value="${contact['resourceName']}">
+          <button type="submit" class="btn">Delete</button>
+        </form>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Add Contact Modal -->
+<div id="addContactModal" class="modal">
+  <div class="modal-content">
+    <h2>Add New Contact</h2>
+    <span class="close-btn" onclick="closeModal('addContactModal')">&times;</span>
+    <form th:action="@{/create-contact}" method="post">
+      <div class="form-group">
+        <label for="addName">Name</label>
+        <input type="text" id="addName" name="name" required>
+      </div>
+      <div class="form-group">
+        <label for="addEmail">Email</label>
+        <input type="email" id="addEmail" name="email" required>
+      </div>
+      <div class="form-group">
+        <label for="addPhone">Phone</label>
+        <input type="tel" id="addPhone" name="phone" required maxlength="11">
+      </div>
+      <button type="submit" class="btn">Add Contact</button>
+    </form>
+  </div>
+</div>
+
+<!-- Update Contact Modal -->
+<div id="updateContactModal" class="modal">
+  <div class="modal-content">
+    <h2>Update Contact</h2>
+    <span class="close-btn" onclick="closeModal('updateContactModal')">&times;</span>
+    <form th:action="@{/update-contact}" method="post">
+      <input type="hidden" name="resourceName" id="updateResourceName">
+      <div class="form-group">
+        <label for="updateName">Name</label>
+        <input type="text" id="updateName" name="name" required>
+      </div>
+      <div class="form-group">
+        <label for="updateEmail">Email</label>
+        <input type="email" id="updateEmail" name="email" required>
+      </div>
+      <div class="form-group">
+        <label for="updatePhone">Phone</label>
+        <input type="tel" id="updatePhone" name="phone" required maxlength="11">
+      </div>
+      <button type="submit" class="btn">Update Contact</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  function openModal(id) {
+    document.getElementById(id).style.display = "flex";
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).style.display = "none";
+  }
+
+  function updateModal(resourceName, name, email, phone) {
+    document.getElementById('updateResourceName').value = resourceName;
+    document.getElementById('updateName').value = name;
+    document.getElementById('updateEmail').value = email;
+    document.getElementById('updatePhone').value = phone;
+    openModal('updateContactModal');
+  }
+</script>
+</body>
+</html>
